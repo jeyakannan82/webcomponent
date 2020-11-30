@@ -1,0 +1,4 @@
+python -m pip install urllib3
+python -m pip install Flask-HTTPAuth
+pip install pysolr
+pip install  pandas
