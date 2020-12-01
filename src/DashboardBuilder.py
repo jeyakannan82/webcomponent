@@ -5,10 +5,6 @@ import pprint
 
 
 class Builder(ABC):
-    """
-    The Builder interface specifies methods for creating the different parts of
-    the Product objects.
-    """
 
     @abstractproperty
     def CustomerData(self) -> None:
@@ -27,12 +23,7 @@ class Builder(ABC):
         pass
 
 
-class ConcreteBuilder(Builder):
-    """
-    The Concrete Builder classes follow the Builder interface and provide
-    specific implementations of the building steps. Your program may have
-    several variations of Builders, implemented differently.
-    """
+class ConcreteDashboardBuilder(Builder):
 
     def produce_customer_experience(self) -> None:
         pass
@@ -42,37 +33,40 @@ class ConcreteBuilder(Builder):
         pass
 
     def __init__(self) -> None:
-        """
-        A fresh builder instance should contain a blank product object, which is
-        used in further assembly.
-        """
-        self._customerData = CustomerData1()
+        self._customerData = CustomerData()
         self.reset()
 
     def reset(self) -> None:
         pass
 
     @property
-    def customerData(self) -> CustomerData1:
-        """
-        Concrete Builders are supposed to provide their own methods for
-        retrieving results. That's because various types of builders may create
-        entirely different products that don't follow the same interface.
-        Therefore, such methods cannot be declared in the base Builder interface
-        (at least in a statically typed programming language).
-
-        Usually, after returning the end result to the client, a builder
-        instance is expected to be ready to start producing another product.
-        That's why it's a usual practice to call the reset method at the end of
-        the `getProduct` method body. However, this behavior is not mandatory,
-        and you can make your builders wait for an explicit reset call from the
-        client code before disposing of the previous result.
-        """
+    def customerData(self) -> CustomerData:
         customer_data = self._customerData
         self.reset()
         return customer_data
 
     def produce_dashboard(self, result) -> None:
+        self._customerData.add(result)
+
+    def produce_reliability(self, result) -> None:
+        self._customerData.add(result)
+
+    def produce_availability(self, result) -> None:
+        self._customerData.add(result)
+
+    def produce_response(self, result) -> None:
+        self._customerData.add(result)
+
+    def build_customer_satisfaction(self, result) -> None:
+        self._customerData.add(result)
+
+    def build_activity_by_action(self, result) -> None:
+        self._customerData.add(result)
+
+    def build_customer_satisfaction(self, result) -> None:
+        self._customerData.add(result)
+
+    def build_NPS_score(self, result) -> None:
         self._customerData.add(result)
 
     def produce_customer_experience(self, result) -> None:
@@ -82,7 +76,7 @@ class ConcreteBuilder(Builder):
         self._customerData.add(result)
 
 
-class CustomerData1:
+class CustomerData:
     """
     It makes sense to use the Builder pattern only when your products are quite
     complex and require extensive configuration.
@@ -94,6 +88,13 @@ class CustomerData1:
 
     def __init__(self) -> None:
         self.datas = []
+        self.reliability = []
+        self.availability = []
+        self.response = []
+        self.customer_satisfaction = []
+        self.activity_by_api = []
+        self.customer_experience = []
+        self.nps_score = []
 
     def add(self, part: Any) -> None:
         self.datas.append(part)
@@ -104,14 +105,14 @@ class CustomerData1:
         for i in self.datas:
             pprint.pprint(i)
 
+    def populate_data(self) -> None:
+        # print(f"Product parts: {', '.join(self.datas)}", end="")
+        print("Number of hits: {0}".format(len(self.datas)))
+        for i in self.datas:
+            pprint.pprint(i)
+
 
 class Director:
-    """
-    The Director is only responsible for executing the building steps in a
-    particular sequence. It is helpful when producing products according to a
-    specific order or configuration. Strictly speaking, the Director class is
-    optional, since the client can control builders directly.
-    """
 
     def __init__(self) -> None:
         self._builder = None
@@ -129,32 +130,43 @@ class Director:
         """
         self._builder = builder
 
-    """
-    The Director can construct several product variations using the same
-    building steps.
-    """
-
     def build_dashboard(self, result) -> None:
-        self.builder.produce_dashboard(result)
+        return self.builder.produce_dashboard(result)
+
+    def build_reliability(self, result) -> None:
+        return self.builder.produce_reliability(result)
+
+    def build_availability(self, result) -> None:
+        return self.builder.produce_availability(result)
+
+    def build_response(self, result) -> None:
+        return self.builder.produce_response(result)
+
+    def build_customer_satisfaction(self, result) -> None:
+        self.builder.produce_customer_satisfaction(result)
+
+    def build_activity_by_action(self, result) -> None:
+        return self.builder.produce_activity_by_action(result)
+
+    def build_customer_satisfaction(self, result) -> None:
+        return self.builder.produce_customer_satisfaction(result)
+
+    def build_NPS_score(self, result) -> None:
+        return self.builder.produce_NPS_score(result)
 
     def build_solutions(self, result) -> None:
-        self.builder.produce_solutions_object(result)
+        return self.builder.produce_solutions_object(result)
 
     def build_customer_experience(self, result) -> None:
-        self.builder.produce_customer_experience(result)
+        return self.builder.produce_customer_experience(result)
         # self.builder.produce_part_b()
         # self.builder.produce_part_c()
 
 
 if __name__ == "__main__":
-    """
-    The client code creates a builder object, passes it to the director and then
-    initiates the construction process. The end result is retrieved from the
-    builder object.
-    """
 
     director = Director()
-    builder = ConcreteBuilder()
+    builder = ConcreteDashboardBuilder()
     director.builder = builder
 
     print("Standard basic product: ")

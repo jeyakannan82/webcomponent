@@ -1,11 +1,12 @@
 #!flask/bin/python
 # ! /usr/bin/python
-from ObjectBuilder import Director, ConcreteBuilder
+from DashboardBuilder import Director, ConcreteDashboardBuilder
 from SolrSearch import SolrConnection
 from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
 from flask import request
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 
@@ -27,14 +28,26 @@ tasks = [
 
 @app.route('/aztecs/dashboards', methods=['GET'])
 def get_tasks():
-    results = SolrConnection.execute_query()
-    print(results)
+    print("Starting ThreadPoolExecutor")
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        reliability = executor.submit(SolrConnection.execute_query())
+        future2 = executor.submit(SolrConnection.execute_query())
+        future3 = executor.submit(SolrConnection.execute_query())
+        print(future1.result())
+    print("All tasks complete")
+    # results = SolrConnection.execute_query()
     director = Director()
     builder = ConcreteBuilder()
     director.builder = builder
-    director.build_dashboard(results)
+    director.build_reliability(reliability.result())
+    director.build_availability(reliability.result())
+    director.build_response(reliability.result())
+    director.build_customer_satisfaction(reliability.result())
+    director.build_activity_by_action(reliability.result())
+    director.build_customer_satisfaction(reliability.result())
+    director.build_NPS_score(reliability.result())
     builder.customerData.list_data()
-    return jsonify({'tasks': tasks, 'tasks1': tasks})
+    return jsonify({'reliability': tasks, 'availability': tasks, 'response': tasks, 'satisfactions': tasks, 'activityByAction': tasks, 'experience': tasks, 'npsScore': tasks})
 
 
 @app.route('/aztecs/experience', methods=['GET'])
