@@ -2,11 +2,11 @@ import pprint
 import pysolr
 import pandas as pd
 import json
+from flask import Flask, jsonify
 
 host = 'lngrdul-7015703.legal.regn.net'
 port = '8983'
 collection = "core1"
-q = "*:*"
 # fl = "id,name"
 fl = ""
 # qt = "select"
@@ -27,21 +27,24 @@ class SolrConnection(object):
         return cls.connection
 
     @classmethod
-    def execute_query(cls):
+    def execute_query(cls, query):
         """execute query on singleton db connection"""
+        print(query)
         connection = cls.get_connection()
-        results = None
+        response = []
         try:
-            results = connection.search(q, **{
+            results = connection.search(query, **{
                 'fl': fl,
                 'fq': fq,
                 'rows': rows
             })
+            print('try in solr request')
         except:
             print('Exception in solr request')
         else:
             docs = pd.DataFrame(results.docs)
-            return results.docs
-    # print("Number of hits: {0}".format(len(results)))
-    # for i in results:
-    #    pprint.pprint(i)
+            print("Number of hits: {0}".format(len(results)))
+            for i in results:
+                pprint.pprint(i)
+                # response.add(i)
+            return results

@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod, abstractproperty
 from typing import Any
 import pprint
+from flask import Flask, jsonify
 
 
 class Builder(ABC):
@@ -48,8 +49,8 @@ class ConcreteDashboardBuilder(Builder):
     def produce_dashboard(self, result) -> None:
         self._customerData.add(result)
 
-    def produce_reliability(self, result) -> None:
-        self._customerData.add(result)
+    def produce_reliability(self, result, name) -> None:
+        self._customerData.add(result, name)
 
     def produce_availability(self, result) -> None:
         self._customerData.add(result)
@@ -88,7 +89,7 @@ class CustomerData:
 
     def __init__(self) -> None:
         self.datas = []
-        self.reliability = []
+        self.reliability = {}
         self.availability = []
         self.response = []
         self.customer_satisfaction = []
@@ -96,12 +97,24 @@ class CustomerData:
         self.customer_experience = []
         self.nps_score = []
 
-    def add(self, part: Any) -> None:
-        self.datas.append(part)
+    def getReliabilityData(self):
+        return self.reliability
+
+    def add(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.reliability = {name: j[k]}
+                        self.datas.append(k)
 
     def list_data(self) -> None:
         # print(f"Product parts: {', '.join(self.datas)}", end="")
-        print("Number of hits: {0}".format(len(self.datas)))
+        print("Number of hits--: {0}".format(len(self.datas)))
         for i in self.datas:
             pprint.pprint(i)
 
@@ -133,8 +146,8 @@ class Director:
     def build_dashboard(self, result) -> None:
         return self.builder.produce_dashboard(result)
 
-    def build_reliability(self, result) -> None:
-        return self.builder.produce_reliability(result)
+    def build_reliability(self, result, name) -> None:
+        return self.builder.produce_reliability(result, name)
 
     def build_availability(self, result) -> None:
         return self.builder.produce_availability(result)
@@ -164,7 +177,6 @@ class Director:
 
 
 if __name__ == "__main__":
-
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
