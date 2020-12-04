@@ -65,22 +65,22 @@ class ConcreteExperienceBuilder(Builder):
         self._customerData.add(result)
 
     def build_bad_experience(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_customer_experience(result)
 
     def build_average_experience(self, result) -> None:
         self._customerData.add(result)
 
     def build_good_experience(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_average_experience(result)
 
     def build_transaction_by_api(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_transaction_by_api(result)
 
     def build_availability(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_availability(result)
 
     def build_transaction_details(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_availability(result)
 
 
 class CustomerData:
@@ -94,8 +94,77 @@ class CustomerData:
         self.average_experience = []
         self.bad_experience = []
 
-    def add(self, part: Any) -> None:
-        self.datas.append(part)
+    def build_bad_experience(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.bad_experience = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_average_experience(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.average_experience = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_good_experience(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.good_experience = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_transaction_by_api(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.transaction_by_api = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_availability(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.availability = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_transaction_details(self, part: Any) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.transaction_details = {name: j[k]}
+                        self.datas.append(k)
 
     def list_data(self) -> None:
         # print(f"Product parts: {', '.join(self.datas)}", end="")

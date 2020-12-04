@@ -50,28 +50,25 @@ class ConcreteDashboardBuilder(Builder):
         self._customerData.add(result)
 
     def produce_reliability(self, result, name) -> None:
-        self._customerData.add(result, name)
+        self._customerData.buildReliability(result, name)
 
     def produce_availability(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.buildAvailability(result)
 
     def produce_response(self, result) -> None:
-        self._customerData.add(result)
-
-    def build_customer_satisfaction(self, result) -> None:
-        self._customerData.add(result)
-
-    def build_activity_by_action(self, result) -> None:
-        self._customerData.add(result)
-
-    def build_customer_satisfaction(self, result) -> None:
-        self._customerData.add(result)
-
-    def build_NPS_score(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.buildResponseTime(result)
 
     def produce_customer_experience(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.buildCustomerExperience(result)
+
+    def build_activity_by_action(self, result) -> None:
+        self._customerData.buildActivityByApi(result)
+
+    def build_customer_satisfaction(self, result) -> None:
+        self._customerData.buildCustomerSatisfaction(result)
+
+    def build_NPS_score(self, result) -> None:
+        self._customerData.buildNPSScore(result)
 
     def produce_solutions_object(self, result) -> None:
         self._customerData.add(result)
@@ -100,7 +97,7 @@ class CustomerData:
     def getReliabilityData(self):
         return self.reliability
 
-    def add(self, part: Any, name) -> None:
+    def buildReliability(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
@@ -110,6 +107,78 @@ class CustomerData:
                     if name == k:
                         print(k)
                         self.reliability = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildAvailability(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.availability = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildResponseTime(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.response = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildCustomerExperience(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.customer_experience = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildActivityByApi(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.activity_by_api = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildCustomerSatisfaction(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.customer_satisfaction = {name: j[k]}
+                        self.datas.append(k)
+
+    def buildNPSScore(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.nps_score = {name: j[k]}
                         self.datas.append(k)
 
     def list_data(self) -> None:

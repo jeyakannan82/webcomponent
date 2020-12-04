@@ -50,31 +50,74 @@ class ConcreteRecommendationBuilder(Builder):
         return customer_data
 
     def build_customer_experience_action(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_customer_experience_action(result)
 
     def build_transaction_status(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_transaction_status(result)
 
     def build_activity_by_action(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_activity_by_action(result)
 
     def build_suggestions(self, result) -> None:
-        self._customerData.add(result)
+        self._customerData.build_suggestions(result)
 
 
 class CustomerData:
 
     def __init__(self) -> None:
         self.datas = []
-        self.transaction_details = []
-        self.availability = []
-        self.transaction_by_api = []
-        self.good_experience = []
-        self.average_experience = []
-        self.bad_experience = []
+        self.suggestions = []
+        self.experience_action = []
+        self.transaction_status = []
+        self.activity_by_action = []
 
-    def add(self, part: Any) -> None:
-        self.datas.append(part)
+    def build_customer_experience_action(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.experience_action = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_transaction_status(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.transaction_status = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_activity_by_action(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.activity_by_action = {name: j[k]}
+                        self.datas.append(k)
+
+    def build_suggestions(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        for i in part:
+            for j in i:
+                for k in j:
+                    print('------')
+                    if name == k:
+                        print(k)
+                        self.suggestions = {name: j[k]}
+                        self.datas.append(k)
 
     def list_data(self) -> None:
         # print(f"Product parts: {', '.join(self.datas)}", end="")
