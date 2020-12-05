@@ -78,7 +78,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.experience_action = {name: j[k]}
                         self.datas.append(k)
@@ -90,7 +90,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.transaction_status = {name: j[k]}
                         self.datas.append(k)
@@ -102,7 +102,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.activity_by_action = {name: j[k]}
                         self.datas.append(k)
@@ -114,7 +114,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.suggestions = {name: j[k]}
                         self.datas.append(k)

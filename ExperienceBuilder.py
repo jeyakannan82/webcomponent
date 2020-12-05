@@ -94,67 +94,67 @@ class CustomerData:
         self.average_experience = []
         self.bad_experience = []
 
-    def build_bad_experience(self, part: Any) -> None:
+    def build_bad_experience(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.bad_experience = {name: j[k]}
                         self.datas.append(k)
 
-    def build_average_experience(self, part: Any) -> None:
+    def build_average_experience(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.average_experience = {name: j[k]}
                         self.datas.append(k)
 
-    def build_good_experience(self, part: Any) -> None:
+    def build_good_experience(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.good_experience = {name: j[k]}
                         self.datas.append(k)
 
-    def build_transaction_by_api(self, part: Any) -> None:
+    def build_transaction_by_api(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.transaction_by_api = {name: j[k]}
                         self.datas.append(k)
 
-    def build_availability(self, part: Any) -> None:
+    def build_availability(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.availability = {name: j[k]}
                         self.datas.append(k)
 
-    def build_transaction_details(self, part: Any) -> None:
+    def build_transaction_details(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:

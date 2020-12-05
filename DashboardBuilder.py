@@ -104,7 +104,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.reliability = {name: j[k]}
                         self.datas.append(k)
@@ -116,7 +116,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.availability = {name: j[k]}
                         self.datas.append(k)
@@ -128,7 +128,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.response = {name: j[k]}
                         self.datas.append(k)
@@ -140,7 +140,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.customer_experience = {name: j[k]}
                         self.datas.append(k)
@@ -152,7 +152,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.activity_by_api = {name: j[k]}
                         self.datas.append(k)
@@ -164,7 +164,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.customer_satisfaction = {name: j[k]}
                         self.datas.append(k)
@@ -176,7 +176,7 @@ class CustomerData:
             for j in i:
                 for k in j:
                     print('------')
-                    if name == k:
+                    if k in name:
                         print(k)
                         self.nps_score = {name: j[k]}
                         self.datas.append(k)
