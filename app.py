@@ -2,7 +2,7 @@
 # ! /usr/bin/python
 
 from DashboardBuilder import Director, ConcreteDashboardBuilder
-from SolrSearch import SolrConnection
+from SolrURLSearch import SolrURLConnection
 from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
@@ -29,13 +29,14 @@ tasks = [
 ]
 
 
-def execute_solr_query(queries):
-    return SolrConnection.execute_query(queries)
-
-
-def square(query):
+def execute_solr_url_query_by_response_time(query):
     # calculate the square of the value of x
-    return SolrConnection.execute_query(query)
+    return SolrURLConnection.execute_query(query, "stats", "response_time")
+
+
+def execute_solr_url_query_by_response(query):
+    # calculate the square of the value of x
+    return SolrURLConnection.execute_query(query, "response")
 
 
 @app.route('/aztecs/dashboards', methods=['GET'])
@@ -43,28 +44,29 @@ def get_tasks():
     print("Starting ThreadPoolExecutor")
     futures = []
     # Define the dataset
-    query = ["*:*", "*:*"]
+    query = ["type:search&wt=json&stats=true&stats.field=response_time",
+             "type:search&wt=json&stats=true&stats.field=response_time"]
     dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
     agents = 5
     chunksize = 3
     with Pool(processes=agents) as pool:
-        result = pool.map(square, query, chunksize)
+        result = pool.map(execute_solr_url_query_by_response_time, query, chunksize)
 
     # Output the result
-    print ('Result:  ' + str(result))
+    print('Result:  ' + str(result[0]))
     print("All tasks complete")
     # results = SolrConnection.execute_query()
     # print(results)
 
-    with Pool(processes=5) as pool:
-        outputs = pool.map(execute_solr_query, query)
+    # with Pool(processes=5) as pool:
+    #    outputs = pool.map(execute_solr_query, query)
     # print("Output: {}".format(outputs))
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
-    director.build_reliability(result, 'type')
+    director.build_reliability(result[0], ['sum', 'mean', 'count', 'min'])
     # print(builder.customerData.getResponseData())
     # director.build_availability(reliability.result())
     # director.build_response(reliability.result())
@@ -73,7 +75,8 @@ def get_tasks():
     # director.build_customer_satisfaction(reliability.result())
     # director.build_NPS_score(reliability.result())
     # builder.customerData.list_data()
-    return jsonify({'reliability': json.dumps(builder.customerData.getReliabilityData()), 'availability': tasks, 'response': tasks, 'satisfactions': tasks,
+    return jsonify({'reliability': builder.customerData.getReliabilityData(), 'availability': tasks, 'response': tasks,
+                    'satisfactions': tasks,
                     'activityByAction': tasks, 'experience': tasks, 'npsScore': tasks})
 
 

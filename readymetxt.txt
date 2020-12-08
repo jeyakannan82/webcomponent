@@ -2,4 +2,4 @@ virtualenv flask
 pip install flask
 python -m pip install urllib3
 pip install pysolr
-pip install  pandas
+pip install  pandasurllib2

@@ -98,73 +98,67 @@ class CustomerData:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if k in name:
-                        print(k)
-                        self.bad_experience = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.bad_experience.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def build_average_experience(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if k in name:
-                        print(k)
-                        self.average_experience = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.average_experience.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def build_good_experience(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if k in name:
-                        print(k)
-                        self.good_experience = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.good_experience.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def build_transaction_by_api(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if k in name:
-                        print(k)
-                        self.transaction_by_api = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.transaction_by_api.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def build_availability(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if k in name:
-                        print(k)
-                        self.availability = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.availability.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def build_transaction_details(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            for j in i:
-                for k in j:
-                    print('------')
-                    if name == k:
-                        print(k)
-                        self.transaction_details = {name: j[k]}
-                        self.datas.append(k)
+            if i in name:
+                print(i)
+                if i in name:
+                    print(i)
+                    self.transaction_details.append(({i: part[i]}))
+                    self.datas.append(i)
 
     def list_data(self) -> None:
         # print(f"Product parts: {', '.join(self.datas)}", end="")
