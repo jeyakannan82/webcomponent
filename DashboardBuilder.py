@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Any
 import pprint
 from flask import Flask, jsonify
+from nps_utils import *
 
 
 class Builder(ABC):
@@ -61,14 +62,14 @@ class ConcreteDashboardBuilder(Builder):
     def produce_customer_experience(self, result) -> None:
         self._customerData.buildCustomerExperience(result)
 
-    def build_activity_by_action(self, result) -> None:
-        self._customerData.buildActivityByApi(result)
+    def produce_activity_by_action(self, result, name) -> None:
+        self._customerData.buildActivityByApi(result, name)
 
     def build_customer_satisfaction(self, result) -> None:
         self._customerData.buildCustomerSatisfaction(result)
 
-    def build_NPS_score(self, result) -> None:
-        self._customerData.buildNPSScore(result)
+    def build_NPS_score(self, result, name) -> None:
+        self._customerData.buildNPSScore(result, name)
 
     def produce_solutions_object(self, result) -> None:
         self._customerData.add(result)
@@ -96,6 +97,18 @@ class CustomerData:
 
     def getReliabilityData(self):
         return self.reliability
+
+    def getNPSScore(self):
+        return self.nps_score
+
+    def getCustomerSatisfaction(self):
+        return self.customer_satisfaction
+
+    def getCustomerExperience(self):
+        return self.customer_experience
+
+    def getActivityByApi(self):
+        return self.activity_by_api
 
     def buildReliability(self, part: Any, name) -> None:
         print('Adding start-----')
@@ -141,36 +154,58 @@ class CustomerData:
 
     def buildActivityByApi(self, part: Any, name) -> None:
         print('Adding start-----')
-        # print(f"Product parts: {', '.join(part)}", end="")
-        for i in part:
-            if i in name:
-                print(i)
-                if i in name:
-                    print(i)
-                    self.activity_by_api.append(({i: part[i]}))
-                    self.datas.append(i)
+        print('buildNPSScore-----')
+        self.activity_by_api = part
 
     def buildCustomerSatisfaction(self, part: Any, name) -> None:
-        print('Adding start-----')
+        print('buildNPSScore-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+        count = 0
+        ok_status = 0
+        if_status = 0
+        uf_status = 0
         for i in part:
-            if i in name:
-                print(i)
-                if i in name:
-                    print(i)
-                    self.customer_satisfaction.append(({i: part[i]}))
+            for j in i['pivot']:
+                for k in j:
+                    pprint.pprint(j[k])
+                    if str(j[k]) in name[0]:
+                        ok_status = j['count']
+                        print(ok_status)
+                    if str(j[k]) in name[1]:
+                        uf_status = j['count']
+                        print(uf_status)
+                    if str(j[k]) in name[2]:
+                        if_status = j['count']
+                        print(if_status)
                     self.datas.append(i)
+            score = (ok_status/(uf_status+if_status+ok_status)) * 100
+            self.customer_satisfaction.append(({i['field']: i['value'], 'score': score}))
 
     def buildNPSScore(self, part: Any, name) -> None:
-        print('Adding start-----')
+        print('buildNPSScore-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+        count = 0
+        ok_status = 0
+        if_status = 0
+        uf_status = 0
         for i in part:
-            if i in name:
-                print(i)
-                if i in name:
-                    print(i)
-                    self.nps_score.append(({i: part[i]}))
+            for j in i['pivot']:
+                for k in j:
+                    pprint.pprint(j[k])
+                    if str(j[k]) in name[0]:
+                        ok_status = j['count']
+                        print(ok_status)
+                    if str(j[k]) in name[1]:
+                        uf_status = j['count']
+                        print(uf_status)
+                    if str(j[k]) in name[2]:
+                        if_status = j['count']
+                        print(if_status)
                     self.datas.append(i)
+            score = round((ok_status/(uf_status+if_status+ok_status)) * 100, 0)
+            self.nps_score.append(({i['field']: i['value'], 'score': score}))
+            self.customer_satisfaction.append(({i['field']: i['value'], 'score': score}))
+            self.customer_experience.append(({i['field']: i['value'], 'score': score}))
 
     def list_data(self) -> None:
         # print(f"Product parts: {', '.join(self.datas)}", end="")
@@ -218,14 +253,14 @@ class Director:
     def build_customer_satisfaction(self, result) -> None:
         self.builder.produce_customer_satisfaction(result)
 
-    def build_activity_by_action(self, result) -> None:
-        return self.builder.produce_activity_by_action(result)
+    def build_activity_by_action(self, result, name) -> None:
+        return self.builder.produce_activity_by_action(result, name)
 
     def build_customer_satisfaction(self, result) -> None:
         return self.builder.produce_customer_satisfaction(result)
 
-    def build_NPS_score(self, result) -> None:
-        return self.builder.produce_NPS_score(result)
+    def build_NPS_score(self, result, name) -> None:
+        return self.builder.build_NPS_score(result, name)
 
     def build_solutions(self, result) -> None:
         return self.builder.produce_solutions_object(result)

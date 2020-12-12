@@ -7,11 +7,15 @@ from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
 from flask import request
+from flask_cors import CORS
+
 import concurrent.futures
 from multiprocessing import Pool
 import json
+from nps_utils import *
 
 app = Flask(__name__)
+CORS(app)
 
 tasks = [
     {
@@ -29,6 +33,11 @@ tasks = [
 ]
 
 
+def execute_solr_url_query_by_facet(query):
+    # calculate the square of the value of x
+    return SolrURLConnection.execute_facet_query(query, "facet")
+
+
 def execute_solr_url_query_by_response_time(query):
     # calculate the square of the value of x
     return SolrURLConnection.execute_query(query, "stats", "response_time")
@@ -39,13 +48,47 @@ def execute_solr_url_query_by_response(query):
     return SolrURLConnection.execute_query(query, "response")
 
 
+@app.route('/aztecs/custScores', methods=['GET'])
+def get_scores():
+    facet_query = ["&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+                   "status ",
+                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type "]
+    agents = 5
+    chunksize = 3
+    with Pool(processes=agents) as pool:
+        result = pool.map(execute_solr_url_query_by_facet, facet_query, chunksize)
+
+    # Output the result
+    print('Result:  ' + str(result[0]))
+    print("All tasks complete")
+    director = Director()
+    builder = ConcreteDashboardBuilder()
+    director.builder = builder
+
+    director.build_NPS_score(result[0]['userID,status'], ['OK', 'UF', 'IF'])
+    director.build_activity_by_action(result[1]['type'], ['type'])
+    nps_scores = builder.customerData.getNPSScore()
+    activityByAction = builder.customerData.getActivityByApi()
+    month_scores = []
+    for nps1 in nps_scores:
+        for nps in nps1:
+            print(nps)
+            if nps in 'score':
+                month_scores.append(nps1[nps])
+
+    return jsonify({'satisfactions': calculate_satisfaction_score(month_scores),
+                    'activityByAction': user_activity_by_apy(activityByAction), 'experience': builder.customerData.getCustomerExperience(),
+                    'npsScore': calculate_nps(month_scores),
+                    'monthScore': calculate_month_score(month_scores)})
+
+
 @app.route('/aztecs/dashboards', methods=['GET'])
 def get_tasks():
     print("Starting ThreadPoolExecutor")
     futures = []
     # Define the dataset
-    query = ["type:search&wt=json&stats=true&stats.field=response_time",
-             "type:search&wt=json&stats=true&stats.field=response_time"]
+    query = ["&wt=json&stats=true&stats.field=response_time",
+             "h&wt=json&stats=true&stats.field=response_time"]
     dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
@@ -63,10 +106,24 @@ def get_tasks():
     # with Pool(processes=5) as pool:
     #    outputs = pool.map(execute_solr_query, query)
     # print("Output: {}".format(outputs))
+    facet_query = "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+                  "status "
+    facet_result = SolrURLConnection.execute_query(facet_query, "facet", "userID,status")
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
     director.build_reliability(result[0], ['sum', 'mean', 'count', 'min'])
+
+    director.build_NPS_score(facet_result, ['OK', 'UF', 'IF'])
+    nps_scores = builder.customerData.getNPSScore()
+    month_scores = []
+    for nps1 in nps_scores:
+        for nps in nps1:
+            print(nps)
+            if nps in 'score':
+                month_scores.append(nps1[nps])
+
+    print(calculate_month_score(month_scores), "({})".format(len(month_scores)))
     # print(builder.customerData.getResponseData())
     # director.build_availability(reliability.result())
     # director.build_response(reliability.result())
@@ -76,8 +133,9 @@ def get_tasks():
     # director.build_NPS_score(reliability.result())
     # builder.customerData.list_data()
     return jsonify({'reliability': builder.customerData.getReliabilityData(), 'availability': tasks, 'response': tasks,
-                    'satisfactions': tasks,
-                    'activityByAction': tasks, 'experience': tasks, 'npsScore': tasks})
+                    'satisfactions': builder.customerData.getCustomerSatisfaction(),
+                    'activityByAction': tasks, 'experience': builder.customerData.getCustomerExperience(),
+                    'npsScore': builder.customerData.getNPSScore(), 'monthScore': calculate_month_score(month_scores)})
 
 
 @app.route('/aztecs/experience', methods=['GET'])
