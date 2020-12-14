@@ -52,32 +52,43 @@ def execute_solr_url_query_by_response(query):
 def get_scores():
     facet_query = ["&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
                    "status ",
-                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type "]
-    agents = 5
+                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type ",
+                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+                   "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-11-01T23:59:59Z"
+                   "&f.date.facet.range.end=2020-12-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
+                   "&facet.pivot={!range=r1}status",
+                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+                   "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-10-01T23:59:59Z"
+                   "&f.date.facet.range.end=2020-11-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
+                   "&facet.pivot={!range=r1}status"]
+    agents = 3
     chunksize = 3
     with Pool(processes=agents) as pool:
         result = pool.map(execute_solr_url_query_by_facet, facet_query, chunksize)
 
     # Output the result
     print('Result:  ' + str(result[0]))
-    print("All tasks complete")
+
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
 
     director.build_NPS_score(result[0]['userID,status'], ['OK', 'UF', 'IF'])
     director.build_activity_by_action(result[1]['type'], ['type'])
+    director.build_customer_experience(result[2], 'current')
+    director.build_customer_experience(result[3], 'previous')
+    print("All tasks complete")
     nps_scores = builder.customerData.getNPSScore()
+    customer_experience = builder.customerData.getCustomerExperience()
     activityByAction = builder.customerData.getActivityByApi()
     month_scores = []
     for nps1 in nps_scores:
         for nps in nps1:
-            print(nps)
             if nps in 'score':
                 month_scores.append(nps1[nps])
 
     return jsonify({'satisfactions': calculate_satisfaction_score(month_scores),
-                    'activityByAction': user_activity_by_apy(activityByAction), 'experience': builder.customerData.getCustomerExperience(),
+                    'activityByAction': user_activity_by_apy(activityByAction), 'experience': customer_experience,
                     'npsScore': calculate_nps(month_scores),
                     'monthScore': calculate_month_score(month_scores)})
 
@@ -98,7 +109,6 @@ def get_tasks():
         result = pool.map(execute_solr_url_query_by_response_time, query, chunksize)
 
     # Output the result
-    print('Result:  ' + str(result[0]))
     print("All tasks complete")
     # results = SolrConnection.execute_query()
     # print(results)
@@ -119,11 +129,8 @@ def get_tasks():
     month_scores = []
     for nps1 in nps_scores:
         for nps in nps1:
-            print(nps)
             if nps in 'score':
                 month_scores.append(nps1[nps])
-
-    print(calculate_month_score(month_scores), "({})".format(len(month_scores)))
     # print(builder.customerData.getResponseData())
     # director.build_availability(reliability.result())
     # director.build_response(reliability.result())

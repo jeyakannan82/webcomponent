@@ -53,17 +53,12 @@ class SolrURLConnection(object):
         try:
             rsp = urlopen(solr_url)
             response = simplejson.load(rsp)
-            # print("number of matches=", response['response']['docs'])
-            pprint.pprint(response)
             print('try in solr request')
             if attribute in "response":
-                print("1")
                 response = response['stats']['stats_fields'][fields]
             elif attribute in "facet":
-                print("2")
                 response = response['facet_counts']['facet_pivot']
             else:
-                print("3")
                 response = response['response']['docs']
         except Exception as e:
             print("Oops!", e.__class__, "occurred.")
