@@ -4,6 +4,7 @@ from typing import Any
 import pprint
 from flask import Flask, jsonify
 from nps_utils import *
+from copy import deepcopy
 
 
 class Builder(ABC):
@@ -53,11 +54,11 @@ class ConcreteDashboardBuilder(Builder):
     def produce_reliability(self, result, name) -> None:
         self._customerData.buildReliability(result, name)
 
-    def produce_availability(self, result) -> None:
-        self._customerData.buildAvailability(result)
+    def produce_availability(self, result,name) -> None:
+        self._customerData.buildAvailability(result,name)
 
-    def produce_response(self, result) -> None:
-        self._customerData.buildResponseTime(result)
+    def produce_response(self, result, name) -> None:
+        self._customerData.buildResponseTime(result, name)
 
     def produce_customer_experience(self, result, name) -> None:
         self._customerData.buildCustomerExperience(result, name)
@@ -100,6 +101,12 @@ class CustomerData:
     def getReliabilityData(self):
         return self.reliability
 
+    def getResponseData(self):
+        return self.response
+
+    def getAvailabilityData(self):
+        return self.availability
+
     def getNPSScore(self):
         return self.nps_score
 
@@ -133,18 +140,28 @@ class CustomerData:
                 self.datas.append(i)
 
     def buildAvailability(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
-            if i in name:
-                if i in name:
-                    self.availability.append(({i: part[i]}))
-                    self.datas.append(i)
+            for j in i:
+                if j in name and i not in self.availability:
+                   self.availability.append(deepcopy(i))
+                   self.datas.append(deepcopy(i))
 
     def buildResponseTime(self, part: Any, name) -> None:
+        print('Adding start-----')
+        # print(f"Product parts: {', '.join(part)}", end="")
+        count = 0
+        seconds = 0
+        milliseconds = 1000
         for i in part:
-            if i in name:
-                if i in name:
-                    self.response.append(({i: part[i]}))
+            for j in i:
+                if j in name[1]:
+                    count += 1
                     self.datas.append(i)
+                    seconds = round(i[j]/milliseconds)
+                    self.response.append({'x': count, 'y': seconds})
+
 
     def buildCustomerExperience(self, part: Any, name) -> None:
         count = 0
@@ -266,11 +283,11 @@ class Director:
     def build_reliability(self, result, name) -> None:
         return self.builder.produce_reliability(result, name)
 
-    def build_availability(self, result) -> None:
-        return self.builder.produce_availability(result)
+    def build_availability(self, result,name) -> None:
+        return self.builder.produce_availability(result,name)
 
-    def build_response(self, result) -> None:
-        return self.builder.produce_response(result)
+    def build_response(self, result, name) -> None:
+        return self.builder.produce_response(result,name)
 
     def build_customer_satisfaction(self, result) -> None:
         self.builder.produce_customer_satisfaction(result)

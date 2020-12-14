@@ -27,14 +27,35 @@ class SolrURLConnection(object):
             rsp = urlopen(solr_url)
             response = simplejson.load(rsp)
             # print("number of matches=", response['response']['docs'])
-            pprint.pprint(response)
+            # pprint.pprint(response)
             print('try in solr request')
-            if attribute in "response":
+            if attribute in "stats":
                 response = response['stats']['stats_fields'][fields]
             elif attribute in "facet":
                 response = response['facet_counts']['facet_pivot'][fields]
             else:
                 response = response['response']['docs']
+        except Exception as e:
+            print("Oops!", e.__class__, "occurred.")
+        else:
+            return response
+
+    @classmethod
+    def execute_exp_query(cls, query, attribute, stats_field):
+        """execute query on singleton db connection"""
+        solr_url = '{0}{1}'.format(url, query)
+        print(solr_url)
+        response = "None"
+        try:
+            rsp = urlopen(solr_url)
+            response = simplejson.load(rsp)
+            # print("number of matches=", response['response']['docs'])
+            print('try in solr request')
+            if attribute == "response" and stats_field=="":
+                print('try in solr request')
+                response = response['response']['docs']
+            else:
+                response = response['stats']['stats_fields'][stats_field]
         except Exception as e:
             print("Oops!", e.__class__, "occurred.")
         else:

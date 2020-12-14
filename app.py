@@ -2,6 +2,7 @@
 # ! /usr/bin/python
 
 from DashboardBuilder import Director, ConcreteDashboardBuilder
+from ExperienceBuilder import ExperienceDirector, ConcreteExperienceBuilder
 from SolrURLSearch import SolrURLConnection
 from flask import Flask, jsonify
 from flask import abort
@@ -12,9 +13,13 @@ from flask_cors import CORS
 import concurrent.futures
 from multiprocessing import Pool
 import json
+from datetime import datetime
+from urllib.parse import urlencode
 from nps_utils import *
+from experience_utils import *
 
 app = Flask(__name__)
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 CORS(app)
 
 tasks = [
@@ -32,6 +37,8 @@ tasks = [
     }
 ]
 
+fromdate = datetime.strptime('11/22/2020','%m/%d/%Y').strftime('%Y-%m-%dT%H:%M:%SZ')
+# fromdate = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
 def execute_solr_url_query_by_facet(query):
     # calculate the square of the value of x
@@ -46,6 +53,15 @@ def execute_solr_url_query_by_response_time(query):
 def execute_solr_url_query_by_response(query):
     # calculate the square of the value of x
     return SolrURLConnection.execute_query(query, "response")
+
+def execute_solr_query_by_response_time(query):
+    # calculate the square of the value of x
+    return SolrURLConnection.execute_exp_query(query, "stats", "response_time")
+
+
+def execute_solr_query_by_response(query):
+    # calculate the square of the value of x
+    return SolrURLConnection.execute_exp_query(query, "response","")
 
 
 @app.route('/aztecs/custScores', methods=['GET'])
@@ -98,17 +114,37 @@ def get_tasks():
     print("Starting ThreadPoolExecutor")
     futures = []
     # Define the dataset
-    query = ["&wt=json&stats=true&stats.field=response_time",
-             "h&wt=json&stats=true&stats.field=response_time"]
+    print(fromdate)
+    # requestresponsedict = {'fq':'date:['+ str(fromdate) +' TO NOW]', 'fl':'id,date,response_code,response_time'}
+    # requestavailabilitydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]', 'fl': 'response_code,response_time'}
+    # requestreliabilitydict={'fl': 'type','fq': 'isPremiumUser:true', 'rows':'50'}
+
+    requestresponsedict = {'fl':'status,response_code,response_time','rows':'10'}
+    requestavailabilitydict = {'fl':'status,response_code,response_time','rows':'50'}
+
+    # requestcategorydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]'}
+
+    query = ["type:search&wt=json&" + urlencode(requestavailabilitydict),
+             "*%3A*&wt=json&" + urlencode(requestresponsedict)]
+
+    response_time_query = ["&wt=json&indent=true&stats=true&stats.field=response_time"]
+
     dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
     agents = 5
     chunksize = 3
+
     with Pool(processes=agents) as pool:
-        result = pool.map(execute_solr_url_query_by_response_time, query, chunksize)
+        result = pool.map(execute_solr_query_by_response, query, chunksize)
+
+    with Pool(processes=agents) as pool:
+        responsetimeresult = pool.map(execute_solr_url_query_by_response_time, response_time_query, chunksize)
 
     # Output the result
+    print('Result:  ' + str(result[0]))
+    print('Result:  ' + str(result[1]))
+    print('Result:  ' + str(responsetimeresult[0]))
     print("All tasks complete")
     # results = SolrConnection.execute_query()
     # print(results)
@@ -116,42 +152,100 @@ def get_tasks():
     # with Pool(processes=5) as pool:
     #    outputs = pool.map(execute_solr_query, query)
     # print("Output: {}".format(outputs))
-    facet_query = "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
-                  "status "
-    facet_result = SolrURLConnection.execute_query(facet_query, "facet", "userID,status")
+    # facet_query = "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+                 # "status "
+    # facet_result = SolrURLConnection.execute_query(facet_query, "facet", "userID,status")
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
-    director.build_reliability(result[0], ['sum', 'mean', 'count', 'min'])
+    director.build_reliability(responsetimeresult[0], ['sum', 'mean', 'count', 'min'])
 
-    director.build_NPS_score(facet_result, ['OK', 'UF', 'IF'])
-    nps_scores = builder.customerData.getNPSScore()
-    month_scores = []
-    for nps1 in nps_scores:
-        for nps in nps1:
-            if nps in 'score':
-                month_scores.append(nps1[nps])
+    # director.build_NPS_score(facet_result, ['OK', 'UF', 'IF'])
+    # nps_scores = builder.customerData.getNPSScore()
+    #month_scores = []
+    # for nps1 in nps_scores:
+        # for nps in nps1:
+            # if nps in 'score':
+                # month_scores.append(nps1[nps])
+    # director.build_NPS_score(facet_result, ['OK', 'UF', 'IF'])
+    # nps_scores = builder.customerData.getNPSScore()
+    # month_scores = []
+    # for nps1 in nps_scores:
+        # for nps in nps1:
+            # print(nps)
+            # if nps in 'score':
+                # month_scores.append(nps1[nps])
+
+    # print(calculate_month_score(month_scores), "({})".format(len(month_scores)))
     # print(builder.customerData.getResponseData())
-    # director.build_availability(reliability.result())
-    # director.build_response(reliability.result())
+    director.build_availability(result[0], ['response_code','response_time','status'])
+    director.build_response(result[1], ['response_code','response_time','status'])
     # director.build_customer_satisfaction(reliability.result())
     # director.build_activity_by_action(reliability.result())
     # director.build_customer_satisfaction(reliability.result())
     # director.build_NPS_score(reliability.result())
     # builder.customerData.list_data()
-    return jsonify({'reliability': builder.customerData.getReliabilityData(), 'availability': tasks, 'response': tasks,
-                    'satisfactions': builder.customerData.getCustomerSatisfaction(),
-                    'activityByAction': tasks, 'experience': builder.customerData.getCustomerExperience(),
-                    'npsScore': builder.customerData.getNPSScore(), 'monthScore': calculate_month_score(month_scores)})
-
+    return jsonify({'reliability': builder.customerData.getReliabilityData(),
+                    'availability': builder.customerData.getAvailabilityData(),
+                    'response': builder.customerData.getResponseData()})
 
 @app.route('/aztecs/experience', methods=['GET'])
-def get_task(task_id):
-    task = [task for task in tasks if task['id'] == task_id]
-    if len(task) == 0:
-        abort(404)
-    return jsonify({'task': task[0]})
+def get_experience():
+    # task = [task for task in tasks if task['id'] == task_id]
+    # if len(task) == 0:
+        # abort(404)
+    print("Starting Experience Builder ThreadPoolExecutor")
+    print(fromdate)
+    requestsuccessdict = {'fl': 'status','rows':'50'}
+    requesttimedict = {'fl': 'type','rows':'50'}
+    requestcategorydict={'fl': 'type','fq': 'isPremiumUser:true', 'rows':'50'}
+    # requestUserExperiencedict = {'rows': '10'}
 
+    # requestcategorydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]'}
+
+    query = ["type:search&wt=json&" + urlencode(requestsuccessdict),
+             "*%3A*&wt=json&" + urlencode(requesttimedict),
+             "*%3A*&wt=json&" + urlencode(requestcategorydict)]
+
+    facet_query = ["&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+                   "status ",
+                   "&wt=json&&fl=type&indent=true&facet=true&stats=true&stats.field=response_time&facet.pivot=userID," \
+                    "response_time "]
+    agents = 5
+    chunksize = 3
+
+    with Pool(processes=agents) as pool:
+        results = pool.map(execute_solr_url_query_by_facet, facet_query, chunksize)
+
+    dataset = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+    # Run this with a pool of 3 agents having a chunksize of 3 until finished
+    agents = 5
+    chunksize = 3
+    with Pool(processes=agents) as pool:
+        result = pool.map(execute_solr_query_by_response, query, chunksize)
+
+
+   # Output the result
+    # print('Result:  ' + str(result[1]))
+    # print('Result:  ' + str(result[0]))
+    # print('Result:  ' + str(result[3]))
+    # print("All tasks complete")
+    director = ExperienceDirector()
+    builder = ConcreteExperienceBuilder()
+    director.builder = builder
+    director.build_success_rate(result[0],['status'])
+    director.build_uptime(result[0],['status'])
+    director.build_category(result[2], ['type'])
+    director.build_good_experience(results[0]['userID,status'], ['OK','IF','UF'])
+    # director.build_customer_experience(results[1])
+    # director.build_average_experience(result[3], ['date', 'userID', 'type', 'response_code', 'response_time', 'status','isPremiumUser'])
+    # director.build_bad_experience(result[3], ['date', 'userID', 'type', 'response_code', 'response_time', 'status','isPremiumUser'])
+    goodExperienceResult = goodexperienceuser(builder.customerData.getGoodExperience())
+    sorted =sortedlist(goodExperienceResult)
+
+    return jsonify({'successRate': successfailurecount(builder.customerData.getSuccessData()), 'upTime':typeCount(builder.customerData.getUptimeData()),
+                    'category':categorycount(builder.customerData.getCategoryData()), 'goodExperience':goodExperienceResult})
 
 @app.errorhandler(404)
 def not_found(error):
