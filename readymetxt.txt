@@ -4,3 +4,5 @@ python -m pip install urllib3
 pip install pysolr
 pip install  pandasurllib2
 pip install simplejson
+pip install reliability
+pip install --upgrade reliability

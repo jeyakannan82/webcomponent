@@ -139,12 +139,26 @@ class CustomerData:
 
     def buildSuccessRate(self, part: Any, name) -> None:
         print('buildSuccessRate-----')
-        # print(f"Product parts: {', '.join(part)}", end="")
+        total_request = 0
+        ok_status = 0
+        if_status = 0
+        uf_status = 0
+        success_transaction = []
+        print(part)
         for i in part:
+            print(i)
             for j in i:
-                if j in name:
-                    self.successRate.append(deepcopy(i))
-                    self.datas.append(deepcopy(i))
+                print(i[j])
+                if str(i[j]) in 'OK':
+                    ok_status = i['count']
+                if str(i[j]) in 'UF':
+                    uf_status = i['count']
+                if str(i[j]) in 'IF':
+                    if_status = i['count']
+        total_request = ok_status + uf_status + if_status
+        self.successRate = [{'y': round((ok_status / total_request) * 100, 0), 'label': 'Success'},
+                                 {'y': round((uf_status / total_request) * 100, 0), 'label': 'User Failures'},
+                                 {'y': round((if_status / total_request) * 100, 0), 'label': 'Server Error'}]
 
     def buildUpTime(self, part: Any, name) -> None:
         print('buildUpTime-----')
@@ -158,11 +172,10 @@ class CustomerData:
     def buildCategory(self, part: Any, name) -> None:
         print('buildCategory-----')
         # print(f"Product parts: {', '.join(part)}", end="")
-        for i in part:
-            for j in i:
-                if j in name:
-                    self.category.append(deepcopy(i))
-                    self.datas.append(deepcopy(i))
+        results = part['facet_counts']['facet_pivot']['type']
+        total_count = part['response']['numFound']
+        for i in results:
+            self.category.append(({'label': i['value'], 'y': round(i['count']/total_count, 2)}))
 
     def buildBadExperience(self, part: Any, name) -> None:
         print('buildBadExperience-----')

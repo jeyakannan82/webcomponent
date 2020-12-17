@@ -5,6 +5,8 @@ import pprint
 from flask import Flask, jsonify
 from nps_utils import *
 from copy import deepcopy
+from reliability.Reliability_testing import one_sample_proportion
+import datetime
 
 
 class Builder(ABC):
@@ -54,8 +56,8 @@ class ConcreteDashboardBuilder(Builder):
     def produce_reliability(self, result, name) -> None:
         self._customerData.buildReliability(result, name)
 
-    def produce_availability(self, result,name) -> None:
-        self._customerData.buildAvailability(result,name)
+    def produce_availability(self, result, name) -> None:
+        self._customerData.buildAvailability(result, name)
 
     def produce_response(self, result, name) -> None:
         self._customerData.buildResponseTime(result, name)
@@ -134,10 +136,33 @@ class CustomerData:
         return self.customer_experience
 
     def buildReliability(self, part: Any, name) -> None:
+        count = 0
+        ok_status = {}
+        if_status = {}
+        uf_status = {}
+        print("print reliability---------------")
+        print(part)
         for i in part:
-            if i in name:
-                self.reliability.append(({i: part[i]}))
-                self.datas.append(i)
+            for ii in i:
+                if ii in 'ranges':
+                    data_count_str = None
+                    data_count = 0
+                    for m in i['ranges']['date']['counts']:
+                        if isinstance(m, int):
+                            data_count = m
+                        else:
+                            data_count_str = str(m)
+                            if str(i['value']) in 'OK':
+                                ok_status[data_count_str] = data_count
+                            if str(i['value']) in 'UF':
+                                uf_status[data_count_str] = data_count
+                            if str(i['value']) in 'IF':
+                                if_status[data_count_str] = data_count
+                            data_count_str = None
+        for ok_key in ok_status.keys():
+            total_count = uf_status[ok_key] + if_status[ok_key] + ok_status[ok_key]
+            result = one_sample_proportion(trials=total_count, successes=ok_status[ok_key])
+            self.current_months.append(({ok_key: result}))
 
     def buildAvailability(self, part: Any, name) -> None:
         print('Adding start-----')
@@ -145,23 +170,21 @@ class CustomerData:
         for i in part:
             for j in i:
                 if j in name and i not in self.availability:
-                   self.availability.append(deepcopy(i))
-                   self.datas.append(deepcopy(i))
+                    self.availability.append(deepcopy(i))
+                    self.datas.append(deepcopy(i))
 
     def buildResponseTime(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
-        count = 0
         seconds = 0
         milliseconds = 1000
-        for i in part:
-            for j in i:
-                if j in name[1]:
-                    count += 1
-                    self.datas.append(i)
-                    seconds = round(i[j]/milliseconds)
-                    self.response.append({'x': count, 'y': seconds})
-
+        for i in part['facets']['date']:
+            for j in part['facets']['date'][i]:
+                if j in name:
+                    response = part['facets']['date'][i][j]
+                    print(response)
+                    seconds = round(response / milliseconds, 6)
+                    self.response.append({'x': i, 'y': seconds})
 
     def buildCustomerExperience(self, part: Any, name) -> None:
         count = 0
@@ -204,8 +227,8 @@ class CustomerData:
             for j in i:
                 print("jeyakannan--")
                 if j in 'count':
-                    print((i[j]/total_count)*100)
-                    i[j] = round((i[j]/total_count)*100, 2)
+                    print((i[j] / total_count) * 100)
+                    i[j] = round((i[j] / total_count) * 100, 2)
 
         self.activity_by_api = part
 
@@ -283,11 +306,11 @@ class Director:
     def build_reliability(self, result, name) -> None:
         return self.builder.produce_reliability(result, name)
 
-    def build_availability(self, result,name) -> None:
-        return self.builder.produce_availability(result,name)
+    def build_availability(self, result, name) -> None:
+        return self.builder.produce_availability(result, name)
 
     def build_response(self, result, name) -> None:
-        return self.builder.produce_response(result,name)
+        return self.builder.produce_response(result, name)
 
     def build_customer_satisfaction(self, result) -> None:
         self.builder.produce_customer_satisfaction(result)

@@ -62,25 +62,15 @@ class SolrURLConnection(object):
             return response
 
     @classmethod
-    def execute_facet_query(cls, query, attribute):
+    def execute_facet_query(cls, query):
         """execute query on singleton db connection"""
         solr_url = '{0}{1}'.format(url, "*%3A*"+query)
-        fields_array = query.split("=")
         print("*************")
         print(query)
-        print(attribute)
-        print(fields_array[len(fields_array)-1])
-        response = "None"
         try:
             rsp = urlopen(solr_url)
             response = simplejson.load(rsp)
             print('try in solr request')
-            if attribute in "response":
-                response = response['stats']['stats_fields'][fields]
-            elif attribute in "facet":
-                response = response['facet_counts']['facet_pivot']
-            else:
-                response = response['response']['docs']
         except Exception as e:
             print("Oops!", e.__class__, "occurred.")
         else:
