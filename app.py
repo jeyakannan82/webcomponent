@@ -4,6 +4,7 @@
 from DashboardBuilder import Director, ConcreteDashboardBuilder
 from ExperienceBuilder import ExperienceDirector, ConcreteExperienceBuilder
 from SolrURLSearch import SolrURLConnection
+from RecommendationBuilder import ConcreteRecommendationBuilder,  RecommendationDirector
 from flask import Flask, jsonify
 from flask import abort
 from flask import make_response
@@ -177,8 +178,6 @@ def get_tasks():
     # print(calculate_month_score(month_scores), "({})".format(len(month_scores)))
     # print(builder.customerData.getResponseData())
     director.build_availability(result[0]['facet_counts']['facet_pivot']['status'], ['OK', 'UF', 'IF'])
-    print("-----------------")
-    print(result[1])
     director.build_response(result[1]['stats']['stats_fields']['response_time'], ['mean'])
     # director.build_customer_satisfaction(reliability.result())
     # director.build_activity_by_action(reliability.result())
@@ -236,8 +235,45 @@ def get_experience():
 
     return jsonify({'successRate': builder.customerData.getSuccessData(),
                     'upTime': builder.customerData.getSuccessData(),
-                    'category':  builder.customerData.getCategoryData(),
+                    'category': builder.customerData.getCategoryData(),
                     'goodExperience': {}})
+
+
+@app.route('/aztecs/recommendation', methods=['GET'])
+def get_recommendation_data():
+    # task = [task for task in tasks if task['id'] == task_id]
+    # if len(task) == 0:
+    # abort(404)
+    print("Starting recommendation Builder ThreadPoolExecutor")
+
+    facet_query = ["&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type,"
+                   "response_code"]
+    agents = 1
+
+    with Pool(processes=agents) as pool:
+        results = pool.map(execute_solr_url_query_by_facet, facet_query)
+
+    # Output the result
+    # print('Result:  ' + str(result[1]))
+    # print('Result:  ' + str(result[0]))
+    # print('Result:  ' + str(result[3]))
+    # print("All tasks complete")
+
+    recommendation_director = RecommendationDirector()
+    recommendation_builder = ConcreteRecommendationBuilder()
+    recommendation_director.builder = recommendation_builder
+    print(results[0])
+    recommendation_director.build_Radar_data(results[0], ['OK', 'UF', 'IF'])
+    # director.build_good_experience(results[0]['userID,status'], ['OK', 'IF', 'UF'])
+    # director.build_customer_experience(results[1]) director.build_average_experience(result[3], ['date', 'userID',
+    # 'type', 'response_code', 'response_time', 'status','isPremiumUser']) director.build_bad_experience(result[3],
+    # ['date', 'userID', 'type', 'response_code', 'response_time', 'status','isPremiumUser'])
+    # goodExperienceResult = goodexperienceuser(builder.customerData.getGoodExperience())
+    # sorted = sortedlist(goodExperienceResult)
+    radar_Data = recommendation_builder.customerData.getRadarData();
+
+    return jsonify({'radarData': radar_Data, 'caption': recommendation_builder.customerData.getCaption(),
+                    'errorCode': recommendation_builder.customerData.getErrorCodes()})
 
 
 @app.errorhandler(404)
