@@ -64,7 +64,7 @@ class SolrURLConnection(object):
     @classmethod
     def execute_facet_query(cls, query):
         """execute query on singleton db connection"""
-        solr_url = '{0}{1}'.format(url, "*%3A*"+query)
+        solr_url = '{0}{1}'.format(url, query)
         print("*************")
         print(query)
         try:

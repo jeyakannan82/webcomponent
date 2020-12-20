@@ -56,6 +56,15 @@ class ConcreteDashboardBuilder(Builder):
     def produce_reliability(self, result, name) -> None:
         self._customerData.buildReliability(result, name)
 
+    def produce_OK(self, result, name) -> None:
+        self._customerData.buildOK(result, name)
+
+    def produce_UF(self, result, name) -> None:
+        self._customerData.buildUF(result, name)
+
+    def produce_IF(self, result, name) -> None:
+        self._customerData.buildIF(result, name)
+
     def produce_availability(self, result, name) -> None:
         self._customerData.buildAvailability(result, name)
 
@@ -99,8 +108,19 @@ class CustomerData:
         self.current_months = []
         self.customer_experience = []
         self.nps_score = []
+        self.okCount = {}
+        self.iFCount = {}
+        self.ufCount = {}
 
     def getReliabilityData(self):
+        print("get reliability----")
+        for ok in self.okCount.keys():
+            total_count = self.okCount[ok] + self.iFCount[ok] + self.ufCount[ok];
+            print(total_count)
+            reliability = 0
+            if total_count >= 0:
+                reliability = round((self.okCount[ok] / total_count) * 100, 2)
+            self.reliability.append({'x': ok, 'y': reliability})
         return self.reliability
 
     def getResponseData(self):
@@ -131,9 +151,35 @@ class CustomerData:
                             self.customer_experience.append(({'Day': day_str, 'PreviousMonth': months[scorekey],
                                                               'CurrentMonth': current[scorekey]}))
                 else:
-
                     datestr = key.split('-')[2]
         return self.customer_experience
+
+    def buildOK(self, part: Any, name) -> None:
+        dats_sting = None
+        for i in part:
+            if isinstance(i, int):
+                self.okCount[dats_sting] = i
+                dats_sting = None
+            else:
+                dats_sting = i
+
+    def buildIF(self, part: Any, name) -> None:
+        dats_sting = None
+        for i in part:
+            if isinstance(i, int):
+                self.iFCount[dats_sting] = i
+                dats_sting = None
+            else:
+                dats_sting = i
+
+    def buildUF(self, part: Any, name) -> None:
+        dats_sting = None
+        for i in part:
+            if isinstance(i, int):
+                self.ufCount[dats_sting] = i
+                dats_sting = None
+            else:
+                dats_sting = i
 
     def buildReliability(self, part: Any, name) -> None:
         count = 0
@@ -178,13 +224,9 @@ class CustomerData:
         # print(f"Product parts: {', '.join(part)}", end="")
         seconds = 0
         milliseconds = 1000
-        for i in part['facets']['date']:
-            for j in part['facets']['date'][i]:
-                if j in name:
-                    response = part['facets']['date'][i][j]
-                    print(response)
-                    seconds = round(response / milliseconds, 6)
-                    self.response.append({'x': i, 'y': seconds})
+        for i in part:
+            print(i)
+            self.response.append({'x': i['date'], 'y': i['response_time']})
 
     def buildCustomerExperience(self, part: Any, name) -> None:
         count = 0
@@ -303,8 +345,14 @@ class Director:
     def build_dashboard(self, result) -> None:
         return self.builder.produce_dashboard(result)
 
-    def build_reliability(self, result, name) -> None:
-        return self.builder.produce_reliability(result, name)
+    def build_UF(self, result, name) -> None:
+        return self.builder.produce_UF(result, name)
+
+    def build_IF(self, result, name) -> None:
+        return self.builder.produce_IF(result, name)
+
+    def build_OK(self, result, name) -> None:
+        return self.builder.produce_OK(result, name)
 
     def build_availability(self, result, name) -> None:
         return self.builder.produce_availability(result, name)

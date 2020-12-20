@@ -70,14 +70,14 @@ def execute_solr_query_by_response(query):
 
 @app.route('/aztecs/custScores', methods=['GET'])
 def get_scores():
-    facet_query = ["&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
-                   "status ",
-                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type ",
-                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+    facet_query = ["*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot"
+                   "=userID,status ", "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true"
+                                      "&stats.field=status&facet.pivot=type ",
+                   "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
                    "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-11-01T23:59:59Z"
                    "&f.date.facet.range.end=2020-12-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
                    "&facet.pivot={!range=r1}status",
-                   "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+                   "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
                    "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-10-01T23:59:59Z"
                    "&f.date.facet.range.end=2020-11-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
                    "&facet.pivot={!range=r1}status"]
@@ -128,16 +128,20 @@ def get_tasks():
 
     # requestcategorydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]'}
 
-    query = ["&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.range={!tag=r1}date"
-             "&f.date.facet.range.start=2020-12-01T23:59:59Z&f.date.facet.range.end=2020-12-07T23:59:59Z&f.date.facet"
-             ".range.gap=%2B1DAY&facet.pivot={!range=r1}status",
-             "&wt=json&stats=true&stats.field=response_time&stats.facet=date"
-             "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-12-01T23:59:59Z"
-             "&f.date.facet.range.end=2020-12-07T23:59:59Z&f.date.facet.range.gap=%2B1DAY"]
+    query = ["status%3AUF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
+             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
+             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "status%3AIF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
+             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
+             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "status%3AOK&wt=json&fl=type&indent=true&facet=true&facet.range=date"
+             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
+             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "*%3A*&fl=date%2Cresponse_time&sort=date%20asc"]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
-    agents = 2
-    chunksize = 3
+    agents = 4
+    chunksize = 4
 
     with Pool(processes=agents) as pool:
         result = pool.map(execute_solr_url_query_by_facet, query, chunksize)
@@ -148,16 +152,16 @@ def get_tasks():
     # results = SolrConnection.execute_query()
     # print(results)
 
-    # with Pool(processes=5) as pool:
-    #    outputs = pool.map(execute_solr_query, query)
-    # print("Output: {}".format(outputs))
-    # facet_query = "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
-    # "status "
-    # facet_result = SolrURLConnection.execute_query(facet_query, "facet", "userID,status")
+    # with Pool(processes=5) as pool: outputs = pool.map(execute_solr_query, query) print("Output: {}".format(
+    # outputs)) facet_query = "&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet
+    # .pivot=userID," \ "status " facet_result = SolrURLConnection.execute_query(facet_query, "facet", "userID,status")
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
-    director.build_reliability(result[0]['facet_counts']['facet_pivot']['status'], ['OK', 'UF', 'IF'])
+    print(result[0])
+    director.build_UF(result[0]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
+    director.build_IF(result[1]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
+    director.build_OK(result[2]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
 
     # director.build_NPS_score(facet_result, ['OK', 'UF', 'IF'])
     # nps_scores = builder.customerData.getNPSScore()
@@ -177,8 +181,8 @@ def get_tasks():
 
     # print(calculate_month_score(month_scores), "({})".format(len(month_scores)))
     # print(builder.customerData.getResponseData())
-    director.build_availability(result[0]['facet_counts']['facet_pivot']['status'], ['OK', 'UF', 'IF'])
-    director.build_response(result[1]['stats']['stats_fields']['response_time'], ['mean'])
+    # director.build_availability(result[0]['facet_counts']['facet_pivot']['status'], ['OK', 'UF', 'IF'])
+    director.build_response(result[3]['response']["docs"], ['mean'])
     # director.build_customer_satisfaction(reliability.result())
     # director.build_activity_by_action(reliability.result())
     # director.build_customer_satisfaction(reliability.result())
@@ -207,8 +211,8 @@ def get_experience():
              "*%3A*&wt=json&" + urlencode(requesttimedict),
              "*%3A*&wt=json&" + urlencode(requestcategorydict)]
 
-    facet_query = ["&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status",
-                   "&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type"]
+    facet_query = ["*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status",
+                   "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type"]
     agents = 2
 
     with Pool(processes=agents) as pool:
@@ -246,9 +250,9 @@ def get_recommendation_data():
     # abort(404)
     print("Starting recommendation Builder ThreadPoolExecutor")
 
-    facet_query = ["&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type,"
-                   "response_code"]
-    agents = 1
+    facet_query = ["*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type,"
+                   "response_code", "*%3A*&wt=json"]
+    agents = 2
 
     with Pool(processes=agents) as pool:
         results = pool.map(execute_solr_url_query_by_facet, facet_query)
