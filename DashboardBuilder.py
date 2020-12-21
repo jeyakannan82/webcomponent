@@ -211,17 +211,23 @@ class CustomerData:
             self.current_months.append(({ok_key: result}))
 
     def buildAvailability(self, part: Any, name) -> None:
-        print('Adding start-----')
+        print('buildAvailability-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+        count = 0
+        reliable_time = 0
+        percentage = 1000
         for i in part:
             for j in i:
-                if j in name and i not in self.availability:
-                    self.availability.append(deepcopy(i))
-                    self.datas.append(deepcopy(i))
+                if j in name[1]:
+                    count += 1
+                    self.datas.append(i)
+                    seconds = round(i[j] / milliseconds)
+                    self.reliability.append({'x': count, 'y': seconds})
 
     def buildResponseTime(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+        count = 0
         seconds = 0
         milliseconds = 1000
         for i in part:

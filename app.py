@@ -60,12 +60,12 @@ def execute_solr_url_query_by_response(query):
 
 def execute_solr_query_by_response_time(query):
     # calculate the square of the value of x
-    return SolrURLConnection.execute_exp_query(query, "stats", "response_time")
+    return SolrURLConnection.execute_exp_query(query, "facet")
 
 
 def execute_solr_query_by_response(query):
     # calculate the square of the value of x
-    return SolrURLConnection.execute_exp_query(query, "response", "")
+    return SolrURLConnection.execute_exp_query(query, "response")
 
 
 @app.route('/aztecs/custScores', methods=['GET'])
@@ -118,7 +118,11 @@ def get_tasks():
     print("Starting ThreadPoolExecutor")
     futures = []
     # Define the dataset
-    print(fromdate)
+    # start_date = datetime.strptime(request.args.get('start_date'), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+    # end_date = datetime.strptime(request.args.get('end_date'), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    # print(start_date)
+    # print(end_date)
     # requestresponsedict = {'fq':'date:['+ str(fromdate) +' TO NOW]', 'fl':'id,date,response_code,response_time'}
     # requestavailabilitydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]', 'fl': 'response_code,response_time'}
     # requestreliabilitydict={'fl': 'type','fq': 'isPremiumUser:true', 'rows':'50'}
@@ -147,7 +151,8 @@ def get_tasks():
         result = pool.map(execute_solr_url_query_by_facet, query, chunksize)
 
     # Output the result
-    print('Result:  ' + str(result[0]))
+    # print('Result:  ' + str(result[0]))
+    # print('Result:  ' + str(result[1]))
     print("All tasks complete")
     # results = SolrConnection.execute_query()
     # print(results)
@@ -158,7 +163,7 @@ def get_tasks():
     director = Director()
     builder = ConcreteDashboardBuilder()
     director.builder = builder
-    print(result[0])
+    # print(result[0])
     director.build_UF(result[0]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
     director.build_IF(result[1]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
     director.build_OK(result[2]['facet_counts']['facet_ranges']['date']['counts'], ['OK', 'UF', 'IF'])
@@ -200,47 +205,53 @@ def get_experience():
     # abort(404)
     print("Starting Experience Builder ThreadPoolExecutor")
     print(fromdate)
-    requestsuccessdict = {'fl': 'status', 'rows': '50'}
-    requesttimedict = {'fl': 'type', 'rows': '50'}
-    requestcategorydict = {'fl': 'type', 'fq': 'isPremiumUser:true', 'rows': '50'}
-    # requestUserExperiencedict = {'rows': '10'}
-
-    # requestcategorydict = {'fq': 'date:[' + str(fromdate) + ' TO NOW]'}
-
-    query = ["type:search&wt=json&" + urlencode(requestsuccessdict),
-             "*%3A*&wt=json&" + urlencode(requesttimedict),
-             "*%3A*&wt=json&" + urlencode(requestcategorydict)]
 
     facet_query = ["*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status",
-                   "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type"]
-    agents = 2
+                   "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type",
+                   "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot"
+                   "=userID,status ", "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true"
+                                      "&stats.field=status&facet.pivot=response_time "]
 
+    experience_query = ["&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+                   "status ",
+                        "&wt=json&fl=type&indent=true&stats=true&stats.field=response_time&facet=true&facet.pivot=userID," \
+                        "response_time," \
+                        "status&facet.field=status&omitHeader=true&group=true&group.field=userID&group.field=status"]
+    agents = 3
+    new_agent = 3
     with Pool(processes=agents) as pool:
-        results = pool.map(execute_solr_url_query_by_facet, facet_query)
+           results = pool.map(execute_solr_url_query_by_facet, facet_query)
+
+    with Pool(processes=new_agent) as pool:
+          result_experience = pool.map(execute_solr_query_by_response_time, experience_query)
+
 
     # Output the result
     # print('Result:  ' + str(result[1]))
     # print('Result:  ' + str(result[0]))
-    # print('Result:  ' + str(result[3]))
+    # print('Experience Response Time Result:  ' + str(result_experience[1]))
     # print("All tasks complete")
+    # print('Success 2 Result:  ' + str(results[2]))
     director = ExperienceDirector()
     builder = ConcreteExperienceBuilder()
     director.builder = builder
-    print(results[0])
     director.build_success_rate(results[0]['facet_counts']['facet_pivot']['status'], ['value', 'count'])
     director.build_uptime(results[0]['facet_counts']['facet_pivot'], ['status'])
     director.build_category(results[1], ['type'])
-    # director.build_good_experience(results[0]['userID,status'], ['OK', 'IF', 'UF'])
-    # director.build_customer_experience(results[1]) director.build_average_experience(result[3], ['date', 'userID',
-    # 'type', 'response_code', 'response_time', 'status','isPremiumUser']) director.build_bad_experience(result[3],
-    # ['date', 'userID', 'type', 'response_code', 'response_time', 'status','isPremiumUser'])
-    # goodExperienceResult = goodexperienceuser(builder.customerData.getGoodExperience())
-    # sorted = sortedlist(goodExperienceResult)
+    director.build_good_experience(result_experience[0]['userID,status'], ['OK', 'IF', 'UF'])
+    director.build_average_experience(result_experience[0]['userID,status'], ['OK', 'IF', 'UF'])
+    director.build_bad_experience(result_experience[0]['userID,status'], ['OK', 'IF', 'UF'])
+    good_experience_result = user_experience(builder.customerData.getGoodExperience())
+    average_experience_result = user_experience(builder.customerData.getAverageExperience())
+    bad_experience_result = user_experience(builder.customerData.getBadExperience())
+    good_exp_sorted = sortedlist(good_experience_result)
+    average_exp_sorted = sortedlist(average_experience_result)
+    bad_exp_sorted = sortedlist(bad_experience_result)
 
     return jsonify({'successRate': builder.customerData.getSuccessData(),
                     'upTime': builder.customerData.getSuccessData(),
-                    'category': builder.customerData.getCategoryData(),
-                    'goodExperience': {}})
+                    'category':  builder.customerData.getCategoryData(),
+                    'goodExperience': good_exp_sorted, 'averageExperience': average_exp_sorted,'badExperience': bad_exp_sorted})
 
 
 @app.route('/aztecs/recommendation', methods=['GET'])
@@ -266,7 +277,7 @@ def get_recommendation_data():
     recommendation_director = RecommendationDirector()
     recommendation_builder = ConcreteRecommendationBuilder()
     recommendation_director.builder = recommendation_builder
-    print(results[0])
+    # print(results[0])
     recommendation_director.build_Radar_data(results[0], ['OK', 'UF', 'IF'])
     # director.build_good_experience(results[0]['userID,status'], ['OK', 'IF', 'UF'])
     # director.build_customer_experience(results[1]) director.build_average_experience(result[3], ['date', 'userID',

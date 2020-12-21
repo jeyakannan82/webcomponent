@@ -72,7 +72,7 @@ def categorycount(categoryCounts):
             {'y': round((download / total) * 100, 0), 'label': 'Download'},
             {'y': round((multisearch / total) * 100, 0), 'label': 'Multi Search'}]
 
-def goodexperienceuser(good_results):
+def user_experience(good_results):
     seen = set()
     new_l = []
     for d in good_results:
@@ -92,11 +92,11 @@ def sortedlist(sorted_list):
                 not_found = False
                 # for data_item in new_item['details']:
                     # if item['userID'] == date['userID']:
-                new_data['userID'].append({'good': item['good'],'user_failed': item['user_failed'],
-                                                                                        'server_failed': item['server_failed'],'meet': item['meet']})
+                new_data['userID'].append({'success': item['success'],'user_failed': item['user_failed'],
+                                                                                        'server_failed': item['server_failed'],'percentage': item['percentage'],'meetExp': item['meet']})
                 break
         if not_found:
-            new_data.append({'userID': item['userID'], item['userID']: [{'good': item['good'],'user_failed': item['user_failed'],
-                                                                                        'server_failed': item['server_failed'],'meet': item['meet']}]})
+            new_data.append({'userID': item['userID'], 'success': item['success'],'user_failed': item['user_failed'],
+                                                                                        'server_failed': item['server_failed'],'percentage': item['percentage'],'meetExp': item['meet']})
     return new_data
 

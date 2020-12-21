@@ -146,9 +146,7 @@ class CustomerData:
         success_transaction = []
         print(part)
         for i in part:
-            print(i)
             for j in i:
-                print(i[j])
                 if str(i[j]) in 'OK':
                     ok_status = i['count']
                 if str(i[j]) in 'UF':
@@ -180,20 +178,67 @@ class CustomerData:
     def buildBadExperience(self, part: Any, name) -> None:
         print('buildBadExperience-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+
+        total = len(part)
+        count = 0
+        ok_status = 0
+        if_status = 0
+        uf_status = 0
+        user_exp_percent = 0
+        percentage = ''
+        meet = ''
         for i in part:
-            for j in i:
-                if j in name:
-                    self.bad_experience.append(deepcopy(i))
-                    self.datas.append(deepcopy(i))
+            for j in i['pivot']:
+                for k in j:
+                    if str(j[k]) in name[0]:
+                        ok_status = j['count']
+                    if str(j[k]) in name[1]:
+                        uf_status = j['count']
+                    if str(j[k]) in name[2]:
+                        if_status = j['count']
+                    self.datas.append(i)
+            user_exp_percent = round((ok_status / (uf_status + if_status + ok_status)) * 100, 0)
+            if  user_exp_percent < 60:
+                meet = 'No'
+                percentage = str(user_exp_percent) + '%'
+            else:
+                meet = 'No'
+                percentage = str(user_exp_percent) + '%'
+
+            if user_exp_percent < 60:
+                self.bad_experience.append(({i['field']: i['value'], 'success': ok_status, 'user_failed': uf_status,
+                                              'server_failed': if_status, 'percentage': percentage, 'meet': meet}))
 
     def buildAverageExperience(self, part: Any, name) -> None:
         print('buildAverageExperience-----')
         # print(f"Product parts: {', '.join(part)}", end="")
+
+        total = len(part)
+        count = 0
+        ok_status = 0
+        if_status = 0
+        uf_status = 0
+        user_exp_percent = 0
+        percentage = ''
+        meet = ''
         for i in part:
-            for j in i:
-                if j in name:
-                    self.average_experience.append(deepcopy(i))
-                    self.datas.append(deepcopy(i))
+            for j in i['pivot']:
+                for k in j:
+                    if str(j[k]) in name[0]:
+                        ok_status = j['count']
+                    if str(j[k]) in name[1]:
+                        uf_status = j['count']
+                    if str(j[k]) in name[2]:
+                        if_status = j['count']
+                    self.datas.append(i)
+
+            user_exp_percent = round((ok_status / (uf_status + if_status + ok_status)) * 100, 0)
+            if  70 > user_exp_percent > 60:
+                meet = 'No'
+                percentage = str(user_exp_percent) + '%'
+
+            if 70 > user_exp_percent > 60:
+                self.average_experience.append(({i['field']: i['value'], 'success': ok_status, 'user_failed': uf_status,'server_failed': if_status, 'percentage': percentage, 'meet': meet}))
 
     def buildGoodExperience(self, part: Any, name) -> None:
         print('buildGoodExperience-----')
@@ -204,7 +249,8 @@ class CustomerData:
         ok_status = 0
         if_status = 0
         uf_status = 0
-        resp_time = 0
+        user_exp_percent = 0
+        percentage = ''
         meet =''
         for i in part:
             for j in i['pivot']:
@@ -216,19 +262,22 @@ class CustomerData:
                     if str(j[k]) in name[2]:
                         if_status = j['count']
                     self.datas.append(i)
-                    if ok_status > if_status + uf_status:
-                        meet = 'Yes'
-                    else:
-                        meet ='No'
+            user_exp_percent = round((ok_status / (uf_status + if_status + ok_status)) * 100, 0)
+            if user_exp_percent > 70.0:
+               meet = 'Yes'
+               percentage = str(user_exp_percent) +'%'
+            else:
+               meet ='No'
+               percentage = str(user_exp_percent) + '%'
 
-            self.good_experience.append(({i['field']: i['value'], 'good': ok_status, 'user_failed':uf_status, 'server_failed':if_status, 'meet':meet }))
+            if user_exp_percent > 70:
+               self.good_experience.append(({i['field']: i['value'], 'success': ok_status, 'user_failed':uf_status, 'server_failed':if_status,'percentage':percentage, 'meet':meet }))
 
     def build_transaction_by_api(self, part: Any, name) -> None:
         print('Adding start-----')
         # print(f"Product parts: {', '.join(part)}", end="")
         for i in part:
             if i in name:
-                print(i)
                 if i in name:
                     print(i)
                     self.transaction_by_api.append(({i: part[i]}))
@@ -241,7 +290,6 @@ class CustomerData:
             if i in name:
                 print(i)
                 if i in name:
-                    print(i)
                     self.availability.append(({i: part[i]}))
                     self.datas.append(i)
 
@@ -252,7 +300,6 @@ class CustomerData:
             if i in name:
                 print(i)
                 if i in name:
-                    print(i)
                     self.transaction_details.append(({i: part[i]}))
                     self.datas.append(i)
 
