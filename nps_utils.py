@@ -136,3 +136,39 @@ def user_activity_by_apy(activities):
         activities_array.append(deepcopy({'y': activity['count'], 'label': activity['value']}))
 
     return activities_array
+
+
+def send_dates(start_date, end_date):
+    def_start_date = start_date.split(' ')
+    split_start_date = def_start_date[len(def_start_date) - 2].strip()
+    def_end_date = end_date.split(' ')
+    split_end_date = def_end_date[len(def_end_date) - 2].strip()
+
+    if start_date == end_date:
+        end_time = ' 23:59:59'
+        start_date = datetime.strptime(split_start_date, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_date = datetime.strptime(split_end_date + end_time , '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    else:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    return start_date, end_date
+
+def send_dates_with_range(start_date, end_date):
+    def_start_date = start_date.split(' ')
+    split_start_date = def_start_date[len(def_start_date) - 2].strip()
+    def_end_date = end_date.split(' ')
+    split_end_date = def_end_date[len(def_end_date) - 2].strip()
+
+    if start_date == end_date:
+        end_time = ' 23:59:59'
+        start_date = datetime.strptime(split_start_date, '%Y-%m-%d').strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_date = datetime.strptime(split_end_date + end_time , '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+        range_gap = 'HOUR'
+
+    else:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
+        range_gap = 'DAY'
+    return start_date, end_date, range_gap

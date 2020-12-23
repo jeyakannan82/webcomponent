@@ -117,15 +117,19 @@ def get_scores():
 def get_customerExperience():
     print("Starting ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
+    start_date, end_date, range_gap = send_dates_with_range(start_date, end_date)
+    print(range_gap)
     query = [
         "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
-        "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-11-01T23:59:59Z"
-        "&f.date.facet.range.end=2020-12-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
+        "&facet.range={!tag=r1}date&f.date.facet.range.start="+start_date+
+        "&f.date.facet.range.end="+end_date+"&f.date.facet.range.gap=%2B1"+range_gap+
         "&facet.pivot={!range=r1}status",
         "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
-        "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-10-01T23:59:59Z"
-        "&f.date.facet.range.end=2020-11-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
+        "&facet.range={!tag=r1}date&f.date.facet.range.start="+start_date+
+        "&f.date.facet.range.end="+end_date+"&f.date.facet.range.gap=%2B1"+range_gap+
         "&facet.pivot={!range=r1}status"
     ]
 
@@ -142,7 +146,6 @@ def get_customerExperience():
 
     director.build_customer_experience(result[0]['facet_counts']['facet_pivot'], 'current')
     director.build_customer_experience(result[1]['facet_counts']['facet_pivot'], 'previous')
-    print
     customer_experience = builder.customerData.getCustomerExperience()
 
     return jsonify({'experience': customer_experience})
@@ -152,8 +155,12 @@ def get_customerExperience():
 def get_npsScore():
     print("Starting ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
-    query = "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true" \
+    start_date, end_date = send_dates(start_date, end_date)
+
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true" \
             "&stats.field=status&facet.pivot=userID,status "
     result = SolrURLConnection.execute_facet_query(query)
     print("NPS Score complete")
@@ -176,16 +183,21 @@ def get_npsScore():
 def get_reliability():
     print("Starting Reliability ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
 
+    start_date, end_date, range_gap = send_dates_with_range(start_date, end_date)
+    print(start_date)
+    print(end_date)
     query = ["status%3AUF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date",
              "status%3AIF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date",
              "status%3AOK&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date"]
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date"]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
     agents = 3
@@ -209,16 +221,20 @@ def get_reliability():
 def get_availability():
     print("Starting Availability ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    start_date, end_date, range_gap = send_dates_with_range(start_date, end_date)
 
     query = ["status%3AUF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date",
              "status%3AIF&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date",
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date",
              "status%3AOK&wt=json&fl=type&indent=true&facet=true&facet.range=date"
-             "&f.date.facet.range.start=2020-12-01T23%3A59%3A59Z&f.date.facet.range.end=2020-12-07T23%3A59%3A59Z"
-             "&f.date.facet.range.gap=%2b1DAY&facet.range=date"]
+             "&f.date.facet.range.start="+start_date+"&f.date.facet.range.end="+end_date+
+             "&f.date.facet.range.gap=%2b1"+range_gap+"&facet.range=date"]
 
     # Run this with a pool of 5 agents having a chunksize of 3 until finished
     agents = 3
@@ -242,8 +258,11 @@ def get_availability():
 def get_response():
     print("Starting Response ThreadPoolExecutor")
     futures = []
-
-    query = "*%3A*&fl=date%2Cresponse_time&sort=date%20asc"
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
+    query = "*%3A*&fl=date%2C%20response_time&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&sort=date%20asc"
+    print(query)
 
     result = SolrURLConnection.execute_facet_query(query)
 
@@ -260,8 +279,11 @@ def get_response():
 def get_satisfactions():
     print("Starting Satisfactions ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query ="*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot" \
+    query ="*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot" \
            "=userID,status "
 
     result = SolrURLConnection.execute_facet_query(query)
@@ -287,8 +309,11 @@ def get_satisfactions():
 def get_activityByAction():
     print("Starting ActivityByAction ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query ="*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true" \
+    query ="*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true" \
            "&stats.field=status&facet.pivot=type "
 
     result = SolrURLConnection.execute_facet_query(query)
@@ -306,16 +331,20 @@ def get_activityByAction():
 def get_customer_experience():
     print("Starting Customer Experience ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date, range_gap = send_dates_with_range(start_date, end_date)
 
-    query = ["*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
-             "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-11-01T23:59:59Z"
-             "&f.date.facet.range.end=2020-12-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
-             "&facet.pivot={!range=r1}status",
-             "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
-             "&facet.range={!tag=r1}date&f.date.facet.range.start=2020-10-01T23:59:59Z"
-             "&f.date.facet.range.end=2020-11-01T23:59:59Z&f.date.facet.range.gap=%2B1DAY"
-             "&facet.pivot={!range=r1}status"
-             ]
+    query = [
+        "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+        "&facet.range={!tag=r1}date&f.date.facet.range.start="+start_date+
+        "&f.date.facet.range.end="+end_date+"&f.date.facet.range.gap=%2B1"+range_gap+
+        "&facet.pivot={!range=r1}status",
+        "*%3A*&wt=json&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status"
+        "&facet.range={!tag=r1}date&f.date.facet.range.start="+start_date+
+        "&f.date.facet.range.end="+end_date+"&f.date.facet.range.gap=%2B1"+range_gap+
+        "&facet.pivot={!range=r1}status"
+    ]
 
     # Run this with a pool of 2 agents having a chunksize of 2 until finished
     agents = 2
@@ -461,8 +490,11 @@ def get_experience():
 def get_successRate():
     print("Starting SuccessRate ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status"
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status"
 
     result = SolrURLConnection.execute_facet_query(query)
 
@@ -478,8 +510,11 @@ def get_successRate():
 def get_upTime():
     print("Starting UpTime ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status"
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=status"
 
     result = SolrURLConnection.execute_facet_query(query)
 
@@ -495,8 +530,11 @@ def get_upTime():
 def get_category():
     print("Starting Category ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type"
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type"
 
     result = SolrURLConnection.execute_facet_query(query)
 
@@ -512,8 +550,11 @@ def get_category():
 def get_goodExperience():
     print("Starting GoodExperience ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+    query = "&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
                         "status "
 
     result = SolrURLConnection.execute_exp_query(query, "facet")
@@ -532,8 +573,11 @@ def get_goodExperience():
 def get_averageExperience():
     print("Starting AverageExperience ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+    query = "&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
                         "status "
 
     result = SolrURLConnection.execute_exp_query(query, "facet")
@@ -552,8 +596,11 @@ def get_averageExperience():
 def get_badExperience():
     print("Starting BadExperience ThreadPoolExecutor")
     futures = []
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
+    query = "&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=userID," \
                         "status "
 
     result = SolrURLConnection.execute_exp_query(query, "facet")
@@ -574,9 +621,12 @@ def get_recommendation_data():
     # if len(task) == 0:
     # abort(404)
     print("Starting recommendation Builder ThreadPoolExecutor")
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    facet_query = ["*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type,"
-                   "response_code", "*%3A*&wt=json"]
+    facet_query = ["*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type,"
+                   "response_code", "*%3A*&wt=json&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D"]
     agents = 2
 
     with Pool(processes=agents) as pool:
@@ -610,8 +660,11 @@ def get_radarData():
     # if len(task) == 0:
     # abort(404)
     print("Starting RadarData ThreadPoolExecutor")
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
                   "response_code"
 
     result = SolrURLConnection.execute_facet_query(query)
@@ -631,8 +684,11 @@ def get_caption():
     # if len(task) == 0:
     # abort(404)
     print("Starting Recommendation Caption")
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
             "response_code"
 
     result = SolrURLConnection.execute_facet_query(query)
@@ -652,8 +708,11 @@ def get_errorCode():
     # if len(task) == 0:
     # abort(404)
     print("Starting Recommendation Error Codes")
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    start_date, end_date = send_dates(start_date, end_date)
 
-    query = "*%3A*&wt=json&fl=type&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
+    query = "*%3A*&wt=json&fl=type&fq=date%3A%5B"+start_date+"%20TO%20"+end_date+"%5D&indent=true&facet=true&stats=true&stats.field=status&facet.pivot=type," \
             "response_code"
 
     result = SolrURLConnection.execute_facet_query(query)
